@@ -2,18 +2,19 @@
 #                                                                              #
 #	HARSH AGRAWAL                                                                #    
 #	Simulated Annealing                                                          #
-#	PYTHON 3.11.0                                                                #
+#	PYTHON 3.8.0                                                                 #
 #                                                                              #
 ################################################################################
 
 import random
 import math
 import numpy as np
-
+import matplotlib.pyplot as plt  # Importing for plotting purposes
+  
 # Define parameters
-search_space_size = (300, 300)
+search_space_size = (3000, 3000)
 num_service_types = 3
-num_instances_per_type = 100  # Assuming pre-loaded data (replace with actual data access)
+num_instances_per_type = 1000  # Assuming pre-loaded data (replace with actual data access)
 max_cost = 1000  # Assuming a maximum cost for normalization
 max_time = 15  # Assuming a maximum time (minutes)
 min_time = 7  # Assuming a minimum time (minutes)
@@ -56,6 +57,9 @@ def simulated_annealing(initial_temperature, cooling_rate, max_iterations):
   best_fitness = current_fitness
   temperature = initial_temperature
 
+  # List to store fitness values for convergence tracking
+  fitness_history = [best_fitness]
+
   for iteration in range(max_iterations):
     # Generate a random neighbor location within a small search area
     new_location = (
@@ -71,31 +75,41 @@ def simulated_annealing(initial_temperature, cooling_rate, max_iterations):
 
     # Metropolis acceptance criterion
     delta_fitness = new_fitness - current_fitness
-    if delta_fitness > 0:  # Always accept improvement
+    if delta_fitness > 0 or random.random() < math.exp(delta_fitness / temperature) :  # Always accept improvement
       current_location = new_location
       current_fitness = new_fitness
-    else:
-      # Accept worse solutions with a probability based on temperature
-      p = math.exp(delta_fitness / temperature)
-      if random.random() < p:
-        current_location = new_location
-        current_fitness = new_fitness
+    # else:
+    #   # Accept worse solutions with a probability based on temperature
+    #   p = math.exp(delta_fitness / temperature)
+    #   if random.random() < p:
+    #     current_location = new_location
+    #     current_fitness = new_fitness
 
     # Update best solution
     if current_fitness < best_fitness:  # Minimize fitness
       best_location = current_location
       best_fitness = current_fitness
+    
+    fitness_history.append(best_fitness)  # Track fitness
 
     # Cool down temperature
     temperature *= cooling_rate
 
-  return best_location, best_fitness
+  return best_location, best_fitness, fitness_history
+
 
 # Run Simulated Annealing
 initial_temperature = 100
 cooling_rate = 0.95
-max_iterations = 1000
-best_location, best_fitness = simulated_annealing(initial_temperature, cooling_rate, max_iterations)
+max_iterations = 50
+best_location, best_fitness, fitness_history = simulated_annealing(initial_temperature, cooling_rate, max_iterations)
 
 print("Best service instance location:", best_location)
 print("Best fitness (lower is better):", best_fitness)
+
+# Plotting the convergence fitness over iterations
+plt.plot(fitness_history)
+plt.title("Convergence of Fitness Over Iterations")
+plt.xlabel("Iteration")
+plt.ylabel("Fitness (lower is better)")
+plt.show()

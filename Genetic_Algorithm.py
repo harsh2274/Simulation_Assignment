@@ -7,13 +7,15 @@
 ################################################################################
 
 import random
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Define parameters
-num_generations = 100
-population_size = 50
-search_space_size = (300, 300)
+num_generations = 50
+population_size = 100
+search_space_size = (3000, 3000)
 num_service_types = 3
-num_instances_per_type = 100
+num_instances_per_type = 1000
 max_cost = 1000  # Assuming a maximum cost for normalization
 max_time = 15  # Assuming a maximum time (minutes)
 min_time = 7 
@@ -57,7 +59,6 @@ def calculate_fitness(location):
       # Select the instance with the highest fitness (assuming higher fitness is better)
       best_instance = max(service_instances, key=lambda i: i["fitness"])
       total_fitness += best_instance["cost"] + max_time
-    print(total_fitness)
   return total_fitness
 
 def roulette_wheel_selection(population):
@@ -96,6 +97,7 @@ def mutation(chromosome, mutation_rate):
 
 def genetic_algorithm():
   population = [generate_chromosome() for _ in range(population_size)]
+  fitness_history = []
   for generation in range(num_generations):
     # Selection (Roulette Wheel Selection)
     parents = roulette_wheel_selection(population)
@@ -110,13 +112,24 @@ def genetic_algorithm():
     # Combine and selection (e.g., elitism)
     new_population = roulette_wheel_selection(population + offspring_with_mutation)  # Replace with appropriate selection here (e.g., elitism)
     population = new_population
-  # Find best solution
-  best_chromosome = max(population, key=lambda c: calculate_fitness(decode_chromosome(c)))
-  best_location = decode_chromosome(best_chromosome)
-  best_fitness = calculate_fitness(best_location)
-  return best_location, best_fitness
+    
+    # Find best solution
+    best_chromosome = max(population, key=lambda c: calculate_fitness(decode_chromosome(c)))
+    best_location = decode_chromosome(best_chromosome)
+    best_fitness = calculate_fitness(best_location)
+    fitness_history.append(best_fitness)
+    print(best_fitness)
+
+  return best_location, best_fitness, fitness_history
 
 # Run GA and print results
-best_location, best_fitness = genetic_algorithm()
+best_location, best_fitness , fitness_history = genetic_algorithm()
 print("Best service instance location:", best_location)
 print("Best fitness (lower is better):", best_fitness)
+
+# Plotting the convergence fitness over generations
+plt.plot(fitness_history)
+plt.title("Convergence of Fitness Over Generations")
+plt.xlabel("Generation")
+plt.ylabel("Fitness (lower is better)")
+plt.show()
